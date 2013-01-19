@@ -1,0 +1,5 @@
+name: episodes
+author: "Dart Episodes Authors <misc@dartlang.org>"
+homepage: https://github.com/dart-lang/episodes
+description: A library for timing performance of web apps.
+version: 0.3.0
