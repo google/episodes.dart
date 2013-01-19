@@ -24,7 +24,7 @@ Then you can directly import the episodes library via
 which contains methods you can use to instrument your code.
 
 You can call mark() to mark points in time, or call measure() to record
-intervals between two such points. You can later extract the results a graphical
+intervals between two such points. You can later extract the results as a graphical
 timeline in HTML, as HTML tables, or you can send them to a listener via
 window.postMessage.
 
@@ -35,7 +35,7 @@ Boomerang][boomerang] compatible reporter available.
 
 # A note about versions
 
-The episode package follows [semantic versioning][semver]. Prior to 1.0, we
+This package follows [semantic versioning][semver]. Prior to 1.0, we
 follow a similar scheme to semantic versioning.  We treat the 'patch' number as
 the 'minor' version, and use + as a patch. So a change from 0.3.0 to 0.3.0+1 is
 a non-breaking change, but a change from 0.3.0 to 0.3.1 is considered a breaking
