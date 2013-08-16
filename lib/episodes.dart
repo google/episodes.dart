@@ -49,7 +49,6 @@
 library episodes;
 
 import 'dart:html';
-import 'dart:uri';
 
 import 'src/constants.dart';
 part 'src/reporter.dart';
@@ -177,9 +176,9 @@ class Episodes {
     try {
       // Opera throws an exception here as it does not support these
       // Surely Dart should hide this, or try implement JS versions of this?
-      window.on.beforeUnload.add(_beforeUnload);
+      window.onBeforeUnload.listen(_beforeUnload);
       // Note - this could happen AFTER the load event has already fired!!
-      window.on.load.add(_onload);
+      window.onLoad.listen(_onload);
     } catch (e) {
     }
   }
@@ -203,7 +202,7 @@ class Episodes {
       return;
     }
     if (markTime == null) {
-      markTime = new Date.now().millisecondsSinceEpoch;
+      markTime = new DateTime.now().millisecondsSinceEpoch;
     } else if (markTime is! int) {
       try {
         // Make sure the time is a number.
@@ -246,7 +245,7 @@ class Episodes {
   */
   void measure(String episodeName,
       [startNameOrTime = null, endNameOrTime = null]) {
-    int now = new Date.now().millisecondsSinceEpoch;
+    int now = new DateTime.now().millisecondsSinceEpoch;
     if (_debug) {
       print('${PREFIX}:${MEASURE}:'
             '${episodeName}:${startNameOrTime}:${endNameOrTime}');
@@ -403,7 +402,7 @@ class Episodes {
       startTime = _findStartCookie();
       if (startTime == null) {
         // fall back to now
-        startTime = new Date.now().millisecondsSinceEpoch;
+        startTime = new DateTime.now().millisecondsSinceEpoch;
       }
     }
     mark(START_TIME, startTime);
@@ -441,7 +440,7 @@ class Episodes {
           } else if (subCookies[j].startsWith('r=')) {
             var startPage = subCookies[j].substring(2);
             referrerMatch =
-                (encodeUriComponent(document.referrer) == startPage);
+                (Uri.encodeComponent(document.referrer) == startPage);
           }
         }
         if (referrerMatch && startTime) {
@@ -459,8 +458,8 @@ class Episodes {
    * This doesn't work in some browsers (Opera).
    */
   void _beforeUnload(unused) {
-    document.cookie = '${PREFIX}=s=${new Date.now().millisecondsSinceEpoch}&'
-         'r=${encodeUriComponent(window.location.toString())}; path=/';
+    document.cookie = '${PREFIX}=s=${new DateTime.now().millisecondsSinceEpoch}&'
+         'r=${Uri.encodeComponent(window.location.toString())}; path=/';
   }
 
   /**
@@ -606,17 +605,17 @@ class Episodes {
       var end = aEpisodes[i][1];
       var delta = end - start;
       var episodeName = aEpisodes[i][2];
-      int leftPx = (PxlPerMs * (start - tFirst)) + 40;
-      int widthPx = (PxlPerMs * delta);
-      sHtml.add('<div style="font-size: 10pt; position: absolute; '
+      int leftPx = ((PxlPerMs * (start - tFirst)) + 40).round();
+      int widthPx = (PxlPerMs * delta).round();
+      sHtml.write('<div style="font-size: 10pt; position: absolute; '
           'left: ${leftPx}px; top: ${(i*30)}px; width: ${widthPx}px; '
           'height: 16px;"><div style="background: #EEE; border: 1px solid; '
           'padding-bottom: 2px;"><nobr style="padding-left: 4px;">'
           '${episodeName}');
-      if (delta > 0) sHtml.add(' ${delta}ms');
-      sHtml.add('</nobr></div></div>\n');
+      if (delta > 0) sHtml.write(' ${delta}ms');
+      sHtml.write('</nobr></div></div>\n');
     }
-    parent.innerHTML = sHtml.toString();
+    parent.innerHtml = sHtml.toString();
   }
 
   /**
