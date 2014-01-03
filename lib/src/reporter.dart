@@ -103,7 +103,7 @@ class Reporter {
     _starts = new Map();
 
     // Add an event listener for episodes messages.
-    window.on.message.add(_handleEpisodeMessage);
+    window.onMessage.listen(_handleEpisodeMessage);
   }
 
   /**
@@ -128,7 +128,7 @@ class Reporter {
         if (null != aParts[3]) {
           _marks[markName] = int.parse(aParts[3]);
         } else {
-          _marks[markName] = new Date.now().millisecondsSinceEpoch;
+          _marks[markName] = new DateTime.now().millisecondsSinceEpoch;
         }
       } else if (action == MEASURE) {
         var episodeName = aParts[2];
@@ -146,7 +146,7 @@ class Reporter {
 
         var endEpochTime;
         if (aParts.length < 5 || aParts[4] == null) {
-          endEpochTime = new Date.now().millisecondsSinceEpoch;
+          endEpochTime = new DateTime.now().millisecondsSinceEpoch;
         } else if (null != _marks[aParts[4]]) {
           endEpochTime = _marks[aParts[4]];
         } else {
@@ -191,7 +191,7 @@ class Reporter {
     var times = new StringBuffer();
     var sep = '';
     for (var key in measureData.keys) {
-      times.add('${sep}${encodeUriComponent(key)}:${measureData[key]}');
+      times.write('${sep}${Uri.encodeComponent(key)}:${measureData[key]}');
       sep = ',';
     }
     return '${baseUrl}?ets=${times}&v=${version}';
@@ -217,8 +217,8 @@ class Reporter {
   String _sendBeacon() {
     _url = _urlFormatter(_baseUrl, _marks, _starts, _measures);
     img = new Element.tag('img');
-    img.on.load.add(_onImageLoad);
-    img.on.error.add(_onImageLoad);
+    img.onLoad.listen(_onImageLoad);
+    img.onError.listen(_onImageLoad);
     return img.src = _url;
   }
 }

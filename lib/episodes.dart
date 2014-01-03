@@ -22,7 +22,7 @@
  *
  *     * starttime - the approximate time when the browser started
  *     * firstbyte - the approximate time when the DOM started loading
- *     * onload - the time when the window.on.load event fired
+ *     * onload - the time when the window.onLoad event fired
  *     * done - the time when done() was called or onload happened, whichever
  *       comes first
  *
@@ -96,7 +96,7 @@ class Episodes {
 
  /**
   * [_autorun] controls whether or not we will automatically call
-  * done() when window.on.load fires.
+  * done() when window.onLoad fires.
   */
   bool _autorun;
 
@@ -523,13 +523,13 @@ class Episodes {
     }
     // Helper function to dump the Marks.
     var table = new StringBuffer('<table ${attributes}><tbody>');
-    table.add('<tr><td>Name</td><td>Time</td></tr>');
+    table.write('<tr><td>Name</td><td>Time</td></tr>');
     for (var markName in _marks.keys) {
       int when = _marks[markName];
-      table.add('<tr><td>${markName}</td><td>${when}</td></tr>');
+      table.write('<tr><td>${markName}</td><td>${when}</td></tr>');
     }
-    table.add('"</tbody></table>');
-    parent.innerHTML = table.toString();
+    table.write('"</tbody></table>');
+    parent.setInnerHtml(table.toString(), treeSanitizer: _nullSanitizer);
   }
 
   /**
@@ -544,23 +544,23 @@ class Episodes {
     }
     // Helper function to dump the Episodes.
     var table = new StringBuffer();
-    table.add('<table ${attribs}><tbody><tr><td>Episode</td>');
-    table.add('<td>Start</td><td>End</td><td>Duration</td></tr>');
+    table.write('<table ${attribs}><tbody><tr><td>Episode</td>');
+    table.write('<td>Start</td><td>End</td><td>Duration</td></tr>');
     for (var episodeName in _measures.keys) {
       // we used to check hasOwnProperty but in Dart we shouldn't need it?
       var start = _starts[episodeName];
       var duration = _measures[episodeName];
       var end = start + duration;
-      table.add('<tr><td>${episodeName}</td><td>${start}</td>');
-      table.add('<td>${end}</td><td>${duration}</td></tr>');
+      table.write('<tr><td>${episodeName}</td><td>${start}</td>');
+      table.write('<td>${end}</td><td>${duration}</td></tr>');
     }
-    table.add('</tbody></table>');
-    parent.innerHTML = table.toString();
+    table.write('</tbody></table>');
+    parent.setInnerHtml(table.toString(), treeSanitizer: _nullSanitizer);
   }
 
   /**
    * Draws a picture of the Episodes as a graphical timeline. It sets the
-   * innerHTML of the [parent] DOM node. [includeMarks] tells whether marks
+   * innerHtml of the [parent] DOM node. [includeMarks] tells whether marks
    * should be drawn; if false only episodes are drawn.
    */
   void drawEpisodes(parent, [bool includeMarks = true]) {
@@ -615,7 +615,7 @@ class Episodes {
       if (delta > 0) sHtml.write(' ${delta}ms');
       sHtml.write('</nobr></div></div>\n');
     }
-    parent.innerHtml = sHtml.toString();
+    parent.setInnerHtml(sHtml.toString(), treeSanitizer: _nullSanitizer);
   }
 
   /**
@@ -643,10 +643,16 @@ class Episodes {
   int _paramToInt(p) {
     if (p is int) {
       return p;
-    } else if (p is double) {
+    } else if (p is num) {
       return p.toInt();
     } else {
       return double.parse(p.toString()).toInt();
     }
   }
+}
+
+const _nullSanitizer = const _NullSanitizer();
+class _NullSanitizer implements NodeTreeSanitizer {
+  const _NullSanitizer();
+  void sanitizeTree(Node node) {}
 }
