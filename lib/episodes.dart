@@ -70,20 +70,20 @@ class Episodes {
   * the absolute values are not of much interest; it is the
   * relative values (intervals) that are of interest.
   */
-  Map _marks;
+  final Map _marks = {};
 
  /**
   * [_measures] holds a set of intervals of interest. It maps
   * names to elapsed time (in milliseconds).
   */
-  Map _measures;
+  final Map _measures = {};
 
  /**
   * [_starts] holds the start times of the intervals. This is
   * useful to tell when the intervals occurred with respect to
   * each other. It maps interval names to start times.
   */
-  Map _starts;
+  final Map _starts = {};
 
  /**
   * [_postMessages] is a flag to control whether to use
@@ -92,23 +92,23 @@ class Episodes {
   * implementation). If this is false, then we would typically
   * use dumpEpisodes or dumpMarks to get the performance data.
   */
-  bool _postMessages;
+  final bool _postMessages;
 
  /**
   * [_autorun] controls whether or not we will automatically call
   * done() when window.onLoad fires.
   */
-  bool _autorun;
+  final bool _autorun;
 
  /**
   * [_includePerfMarks] controls whether or not to create a set of
   * marks and intervals (episodes) from the window.performance.timing
   * statistics.
   */
-  bool _includePerfMarks;
+  final bool _includePerfMarks;
 
  /** [_debug] controls whether or not to print debug logs.  */
-  bool _debug;
+  final bool _debug;
 
  /**
   * To use the library an instance of the Episodes class
@@ -129,19 +129,8 @@ class Episodes {
         _includePerfMarks = includePerfMarks,
         _autorun = autorun,
         _debug = debug {
-    _targetOrigin =
-        '${window.location.protocol}//'
-        '${window.location.hostname}:${window.location.port}';
-    // If we're running locally we can get a file://-style target
-    // origin which can blow up window.postMessage, so fix that.
-    if (_targetOrigin.startsWith('file://')) {
-      _targetOrigin = '*';
-    }
-    _marks = {};
-    _measures = {};
-    // We need to save the starts so that given a measure we can
-    // say the epoch times that it began and ended.
-    _starts = {};
+    _setTargetOrigin();
+
     // Get the start time. This can come from
     // a cookie, or from window.performance.timing.
     var startTime = findStartTime();
@@ -183,6 +172,36 @@ class Episodes {
     }
   }
 
+  /**
+   * To use the library an instance of the Episodes class should be created.
+   * This can include the initial values for [postMessages],
+   * [includePerfMarks], [autorun] and [debug].
+   *
+   * <p>This constructor will not set 'firstbyte' or 'starttime', nor will it
+   * listen for the onLoad event.
+   */
+  Episodes.withoutDefaultValues([
+     bool postMessages = true,
+     bool includePerfMarks = true,
+     bool autorun = false,
+     bool debug = false]): _postMessages = postMessages,
+         _includePerfMarks = includePerfMarks,
+         _autorun = autorun,
+         _debug = debug {
+    _setTargetOrigin();
+  }
+
+  _setTargetOrigin() {
+    _targetOrigin =
+        '${window.location.protocol}//'
+        '${window.location.hostname}:${window.location.port}';
+    // If we're running locally we can get a file://-style target
+    // origin which can blow up window.postMessage, so fix that.
+    if (_targetOrigin.startsWith('file://')) {
+      _targetOrigin = '*';
+    }
+  }
+  
   /**
    * mark() sets a time marker (typically the beginning of an episode).
    * [markName] is a name to associate with the mark, and [markTime],
@@ -227,12 +246,20 @@ class Episodes {
 
     // Upon getting certain special marks we create some special episodes.
     if (markName == FIRST_BYTE) {
-      measure(BACK_END, START_TIME, FIRST_BYTE);
+      if (_marks.containsKey(START_TIME)) {
+        measure(BACK_END, START_TIME, FIRST_BYTE);
+      }
     } else if (markName == ON_LOAD) {
-      measure(FRONT_END, FIRST_BYTE, ON_LOAD);
-      measure(PAGE_LOAD_TIME, START_TIME, ON_LOAD);
+      if (_marks.containsKey(FIRST_BYTE)) {
+        measure(FRONT_END, FIRST_BYTE, ON_LOAD);
+      }
+      if (_marks.containsKey(START_TIME)) {
+        measure(PAGE_LOAD_TIME, START_TIME, ON_LOAD);
+      }
     } else if (markName == DONE) {
-      measure(TOTAL_TIME, START_TIME);
+      if (_marks.containsKey(START_TIME)) {
+        measure(TOTAL_TIME, START_TIME);
+      }
     }
   }
 
@@ -584,6 +611,9 @@ class Episodes {
         }
       }
     }
+
+    if (aEpisodes.length < 2) return;
+
     aEpisodes.sort(_sortEpisodes);
 
     // Find start and end of all episodes.
@@ -596,17 +626,20 @@ class Episodes {
       }
     }
 
+    // Handle the case where we've got two marks at exactly the same time.
+    if (tFirst == tLast) tLast++;
+
     // Create HTML to represent the episodes.
     var nPixels = parent.clientWidth - 100;
-    num PxlPerMs = nPixels / (tLast - tFirst);
+    num pixelsPerMs = nPixels / (tLast - tFirst);
     var sHtml = new StringBuffer();
     for (var i = 0; i < aEpisodes.length; i++ ) {
       var start = aEpisodes[i][0];
       var end = aEpisodes[i][1];
       var delta = end - start;
       var episodeName = aEpisodes[i][2];
-      int leftPx = ((PxlPerMs * (start - tFirst)) + 40).round();
-      int widthPx = (PxlPerMs * delta).round();
+      int leftPx = ((pixelsPerMs * (start - tFirst)) + 40).round();
+      int widthPx = (pixelsPerMs * delta).round();
       sHtml.write('<div style="font-size: 10pt; position: absolute; '
           'left: ${leftPx}px; top: ${(i*30)}px; width: ${widthPx}px; '
           'height: 16px;"><div style="background: #EEE; border: 1px solid; '
@@ -656,3 +689,4 @@ class _NullSanitizer implements NodeTreeSanitizer {
   const _NullSanitizer();
   void sanitizeTree(Node node) {}
 }
+
