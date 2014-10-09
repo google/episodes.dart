@@ -246,18 +246,21 @@ class Episodes {
 
     // Upon getting certain special marks we create some special episodes.
     if (markName == FIRST_BYTE) {
-      if (_marks.containsKey(START_TIME)) {
+      if (_marks.containsKey(START_TIME) &&
+          _marksExist([START_TIME, FIRST_BYTE])) {
         measure(BACK_END, START_TIME, FIRST_BYTE);
       }
     } else if (markName == ON_LOAD) {
-      if (_marks.containsKey(FIRST_BYTE)) {
+      if (_marks.containsKey(FIRST_BYTE) &&
+          _marksExist([FIRST_BYTE, ON_LOAD])) {
         measure(FRONT_END, FIRST_BYTE, ON_LOAD);
       }
-      if (_marks.containsKey(START_TIME)) {
+      if (_marks.containsKey(START_TIME) &&
+          _marksExist([START_TIME, ON_LOAD])) {
         measure(PAGE_LOAD_TIME, START_TIME, ON_LOAD);
       }
     } else if (markName == DONE) {
-      if (_marks.containsKey(START_TIME)) {
+      if (_marks.containsKey(START_TIME) && _marksExist([START_TIME])) {
         measure(TOTAL_TIME, START_TIME);
       }
     }
@@ -682,6 +685,10 @@ class Episodes {
       return double.parse(p.toString()).toInt();
     }
   }
+
+  /** Checks whether all the given marks exist. */
+  bool _marksExist(List<String> marks) =>
+      marks.every((m) => getMark(m) != null);
 }
 
 const _nullSanitizer = const _NullSanitizer();
